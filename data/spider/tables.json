@@ -1,0 +1,89 @@
+[
+   {
+      "db_id": "student_transcripts_tracking",
+      "foreign_keys": [
+         [
+            19,
+            14
+         ],
+         [
+            24,
+            10
+         ],
+         [
+            34,
+            1
+         ],
+         [
+            33,
+            1
+         ],
+         [
+            47,
+            32
+         ],
+         [
+            46,
+            28
+         ],
+         [
+            45,
+            18
+         ],
+         [
+            51,
+            44
+         ],
+         [
+            50,
+            10
+         ],
+         [
+            56,
+            52
+         ],
+         [
+            55,
+            49
+         ]
+      ],
+      "primary_keys": [
+         1,
+         10,
+         14,
+         18,
+         23,
+         28,
+         32,
+         44,
+         49,
+         52
+      ],
+      "table_names": [
+         "addresses",
+         "courses",
+         "departments",
+         "degree programs",
+         "sections",
+         "semesters",
+         "students",
+         "student enrolment",
+         "student enrolment courses",
+         "transcripts",
+         "transcript contents"
+      ],
+      "table_names_original": [
+         "Addresses",
+         "Courses",
+         "Departments",
+         "Degree_Programs",
+         "Sections",
+         "Semesters",
+         "Students",
+         "Student_Enrolment",
+         "Student_Enrolment_Courses",
+         "Transcripts",
+         "Transcript_Contents"
+      ]
+   }
+]
