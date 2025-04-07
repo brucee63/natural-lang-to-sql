@@ -11,3 +11,4 @@ timescale-vector
 ngram
 jellyfish
 rapidfuzz
+sqlalchemy
