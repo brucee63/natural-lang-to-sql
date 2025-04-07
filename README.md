@@ -32,74 +32,108 @@ The original database and the natural language examples are provided here - http
 
 ```mermaid
 erDiagram
-    Addresses ||--o{ Students : "current_address"
-    Addresses ||--o{ Students : "permanent_address"
-    Departments ||--o{ Degree_Programs : "offers"
-    Courses ||--o{ Sections : "has"
-
+    %% Entities and Attributes
     Addresses {
-        int address_id PK
-        string line_1
-        string line_2
-        string line_3
-        string city
-        string zip_postcode
-        string state_province_county
-        string country
-        string other_address_details
+        INTEGER address_id PK
+        VARCHAR(255) line_1
+        VARCHAR(255) line_2
+        VARCHAR(255) line_3
+        VARCHAR(255) city
+        VARCHAR(20) zip_postcode
+        VARCHAR(255) state_province_county
+        VARCHAR(255) country
+        VARCHAR(255) other_address_details
     }
 
     Courses {
-        int course_id PK
-        string course_name
-        string course_description
-        string other_details
+        INTEGER course_id PK
+        VARCHAR(255) course_name
+        VARCHAR(255) course_description
+        VARCHAR(255) other_details
     }
 
     Departments {
-        int department_id PK
-        string department_name
-        string department_description
-        string other_details
+        INTEGER department_id PK
+        VARCHAR(255) department_name
+        VARCHAR(255) department_description
+        VARCHAR(255) other_details
     }
 
     Degree_Programs {
-        int degree_program_id PK
-        int department_id FK
-        string degree_summary_name
-        string degree_summary_description
-        string other_details
+        INTEGER degree_program_id PK
+        INTEGER department_id FK
+        VARCHAR(255) degree_summary_name
+        VARCHAR(255) degree_summary_description
+        VARCHAR(255) other_details
     }
 
     Sections {
-        int section_id PK
-        int course_id FK
-        string section_name
-        string section_description
-        string other_details
+        INTEGER section_id PK
+        INTEGER course_id FK
+        VARCHAR(255) section_name
+        VARCHAR(255) section_description
+        VARCHAR(255) other_details
     }
 
     Semesters {
-        int semester_id PK
-        string semester_name
-        string semester_description
-        string other_details
+        INTEGER semester_id PK
+        VARCHAR(255) semester_name
+        VARCHAR(255) semester_description
+        VARCHAR(255) other_details
     }
 
     Students {
-        int student_id PK
-        int current_address_id FK
-        int permanent_address_id FK
-        string first_name
-        string middle_name
-        string last_name
-        string cell_mobile_number
-        string email_address
-        string ssn
-        datetime date_first_registered
-        datetime date_left
-        string other_student_details
+        INTEGER student_id PK
+        INTEGER current_address_id FK
+        INTEGER permanent_address_id FK
+        VARCHAR(80) first_name
+        VARCHAR(40) middle_name
+        VARCHAR(40) last_name
+        VARCHAR(40) cell_mobile_number
+        VARCHAR(40) email_address
+        VARCHAR(40) ssn
+        DATETIME date_first_registered
+        DATETIME date_left
+        VARCHAR(255) other_student_details
     }
+
+    Student_Enrolment {
+        INTEGER student_enrolment_id PK
+        INTEGER degree_program_id FK
+        INTEGER semester_id FK
+        INTEGER student_id FK
+        VARCHAR(255) other_details
+    }
+
+    Student_Enrolment_Courses {
+        INTEGER student_course_id PK
+        INTEGER course_id FK
+        INTEGER student_enrolment_id FK
+    }
+
+    Transcripts {
+        INTEGER transcript_id PK
+        DATETIME transcript_date
+        VARCHAR(255) other_details
+    }
+
+    Transcript_Contents {
+        INTEGER student_course_id FK
+        INTEGER transcript_id FK
+    }
+
+    %% Relationships
+    Addresses ||--o{ Students : "current_address_id"
+    Addresses ||--o{ Students : "permanent_address_id"
+    Departments ||--o{ Degree_Programs : "department_id"
+    Courses ||--o{ Sections : "course_id"
+    Courses ||--o{ Student_Enrolment_Courses : "course_id"
+    Degree_Programs ||--o{ Student_Enrolment : "degree_program_id"
+    Semesters ||--o{ Student_Enrolment : "semester_id"
+    Students ||--o{ Student_Enrolment : "student_id"
+    Student_Enrolment ||--o{ Student_Enrolment_Courses : "student_enrolment_id"
+    Student_Enrolment_Courses ||--o{ Transcript_Contents : "student_course_id"
+    Transcripts ||--o{ Transcript_Contents : "transcript_id"
 ```
 
 per Spider README.md -

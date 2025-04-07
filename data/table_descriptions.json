@@ -1,0 +1,46 @@
+[
+    {
+        "table_name": "Addresses",
+        "description": "Stores address information for students, including current and permanent addresses. Contains fields like city, country, and zip code."
+    },
+    {
+        "table_name": "Courses",
+        "description": "Holds details about academic courses offered. Includes course name and description."
+    },
+    {
+        "table_name": "Departments",
+        "description": "Contains information about academic departments. Stores department name and description."
+    },
+    {
+        "table_name": "Degree_Programs",
+        "description": "Manages data on degree programs offered by departments. Links to departments and includes summary details."
+    },
+    {
+        "table_name": "Sections",
+        "description": "Stores information about specific sections of courses. Connects to courses and includes section-specific details."
+    },
+    {
+        "table_name": "Semesters",
+        "description": "Tracks semester periods for student enrollment. Includes semester name and description."
+    },
+    {
+        "table_name": "Students",
+        "description": "Maintains student personal and contact information. Links to addresses and tracks registration dates."
+    },
+    {
+        "table_name": "Student_Enrolment",
+        "description": "Records student enrollment in degree programs for specific semesters. Connects students, programs, and semesters."
+    },
+    {
+        "table_name": "Student_Enrolment_Courses",
+        "description": "Links enrolled students to specific courses they are taking. Junction table between enrollment and courses."
+    },
+    {
+        "table_name": "Transcripts",
+        "description": "Stores transcript records with issuance dates. Used to track academic progress."
+    },
+    {
+        "table_name": "Transcript_Contents",
+        "description": "Connects transcripts to specific course enrollments. Junction table detailing transcript contents."
+    }
+]
