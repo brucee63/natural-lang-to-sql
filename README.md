@@ -3,6 +3,36 @@ This is a pure python project for natural language to SQL completions with LLMs.
 
 Much of the base project template was taken from [daveebbelaar](https://github.com/daveebbelaar/ai-cookbook/commits?author=daveebbelaar). 
 
+## Agent process flow (basic)
+
+```mermaid
+flowchart LR;
+classDef llmCall fill: #e8f5e9,stroke: #4caf50,stroke-width:2px,font-weight:bold;
+
+classDef startStop fill:#ffb278,stroke: #e08050,stroke-width:2px
+
+classDef dataNode fill:#e0f7fa,stroke: #00796b,color: #004d40 stroke-width:2px,font-weight:bold;
+
+in((In)):::startStop  
+tables[/Tables List\]:::dataNode
+tablematch[Match Tables ]:::llmCall
+matchtables{Match?}
+exit((Exit)):::startStop
+getschemas[/Table Schemas\]:::dataNode
+generatesql[Generate SQL]:::llmCall
+executesql[Execute SQL]:::llmCall
+out((Out)):::startStop
+
+in --> tables
+tables --> tablematch
+tablematch --tables--> matchtables
+matchtables --Pass--> getschemas
+matchtables -.-|Fail| exit
+getschemas --> generatesql
+generatesql --SQL--> executesql
+executesql --> out
+```
+
 ## Database 
 This project utilizes the `student_transcripts_tracking` database provided in Yale's [Spider 1.0 project](https://yale-lily.github.io/spider). This is a Text-to-SQL challenge where natural language queries were and the corresponding SQL was provided. They provide `sqlite` databases. cited as follows:
 
