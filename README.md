@@ -15,8 +15,8 @@ classDef dataNode fill:#e0f7fa,stroke: #00796b,color: #004d40 stroke-width:2px,f
 
 in((In)):::startStop  
 tables[/Tables List\]:::dataNode
-tablematch[Match Tables ]:::llmCall
-matchtables{Match?}
+filtertables[Filter Tables]:::llmCall
+matchtables{Results?}
 exit((Exit)):::startStop
 getschemas[/Table Schemas\]:::dataNode
 generatesql[Generate SQL]:::llmCall
@@ -24,14 +24,55 @@ executesql[Execute SQL]:::llmCall
 out((Out)):::startStop
 
 in --> tables
-tables --> tablematch
-tablematch --tables--> matchtables
+tables --> filtertables
+filtertables --tables--> matchtables
 matchtables --Pass--> getschemas
 matchtables -.-|Fail| exit
 getschemas --> generatesql
 generatesql --SQL--> executesql
 executesql --> out
 ```
+
+## Agent process Flow (RAG)
+
+```mermaid
+flowchart LR;
+classDef llmCall fill: #e8f5e9,stroke: #4caf50,stroke-width:2px,font-weight:bold;
+
+classDef startStop fill:#ffb278,stroke: #e08050,stroke-width:2px
+
+classDef dataNode fill:#e0f7fa,stroke: #00796b,color: #004d40 stroke-width:2px,font-weight:bold;
+
+classDef processNode fill:#fff9c4,stroke: #fbc02d,stroke-width:2px;
+
+in((In)):::startStop
+vectorstore1[(Vector Store)]:::processNode
+tables[/Tables List\]:::dataNode
+filtertables[Filter Tables]:::llmCall
+matchtables{Results?}
+exit((Exit)):::startStop
+getschemas[/Table Schemas\]:::dataNode
+vectorstore2[(Vector Store)]:::processNode
+examples[/SQL Examples\]:::dataNode
+generatesql[Generate SQL]:::llmCall
+executesql[Execute SQL]:::llmCall
+out((Out)):::startStop
+
+
+in --> vectorstore1
+vectorstore1 --> tables
+tables --> filtertables
+filtertables --tables--> matchtables
+matchtables --Pass--> vectorstore2
+matchtables -.-|Fail| exit
+vectorstore2 -->getschemas
+vectorstore2 --> examples
+getschemas --Schemas--> generatesql
+examples --Examples--> generatesql
+generatesql --SQL--> executesql
+executesql --> out
+```
+
 
 ## Database 
 This project utilizes the `student_transcripts_tracking` database provided in Yale's [Spider 1.0 project](https://yale-lily.github.io/spider). This is a Text-to-SQL challenge where natural language queries were and the corresponding SQL was provided. They provide `sqlite` databases. cited as follows:
