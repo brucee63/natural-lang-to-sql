@@ -12,3 +12,4 @@ ngram
 jellyfish
 rapidfuzz
 sqlalchemy
+alembic

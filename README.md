@@ -113,11 +113,11 @@ erDiagram
         tags text[]
         performance_notes text
         source varchar
-        created_at timestamptz
-        updated_at timestamptz
         avg_rating float
         feedback_count integer
         last_feedback_date timestamptz
+        created_at timestamptz
+        updated_at timestamptz
     }
 
     database_schemas {
@@ -181,7 +181,8 @@ erDiagram
         execution_time_ms integer
         success boolean
         error_message text
-        timestamp timestamptz
+        created_at timestamptz
+        updated_at timestamptz
     }
 
     query_feedback {
@@ -196,7 +197,8 @@ erDiagram
         is_correct boolean
         correction text
         user_id varchar
-        timestamp timestamptz
+        created_at timestamptz
+        updated_at timestamptz
     }
 ```
 

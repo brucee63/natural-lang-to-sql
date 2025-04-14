@@ -79,11 +79,11 @@ erDiagram
         tags text[]
         performance_notes text
         source varchar
-        created_at timestamptz
-        updated_at timestamptz
         avg_rating float
         feedback_count integer
         last_feedback_date timestamptz
+        created_at timestamptz
+        updated_at timestamptz
     }
 
     database_schemas {
@@ -147,7 +147,8 @@ erDiagram
         execution_time_ms integer
         success boolean
         error_message text
-        timestamp timestamptz
+        created_at timestamptz
+        updated_at timestamptz
     }
 
     query_feedback {
@@ -162,7 +163,8 @@ erDiagram
         is_correct boolean
         correction text
         user_id varchar
-        timestamp timestamptz
+        created_at timestamptz
+        updated_at timestamptz
     }
 ```
 
@@ -171,16 +173,6 @@ erDiagram
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 CREATE EXTENSION IF NOT EXISTS vector;
-
--- Track embedding models used
-CREATE TABLE embedding_models (
-    id SERIAL PRIMARY KEY,
-    model_name VARCHAR(100) NOT NULL,
-    dimensions INTEGER NOT NULL,
-    provider VARCHAR(50) NOT NULL,
-    version VARCHAR(50),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
 
 -- Track different database contexts
 CREATE TABLE databases (
@@ -201,7 +193,6 @@ CREATE TABLE sql_samples (
     description_embedding VECTOR(1536) NOT NULL,
     complexity SMALLINT,
     tags TEXT[],
-    embedding_model_id INTEGER REFERENCES embedding_models(id),
     avg_rating FLOAT,
     feedback_count INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -218,7 +209,6 @@ CREATE TABLE schema_metadata (
     embedding VECTOR(1536) NOT NULL,
     columns JSONB NOT NULL, -- Store column metadata
     sample_data JSONB, -- Optional sample data
-    embedding_model_id INTEGER REFERENCES embedding_models(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_database FOREIGN KEY (database_id) REFERENCES databases(id),
@@ -252,7 +242,8 @@ CREATE TABLE query_feedback (
     is_correct BOOLEAN NOT NULL,
     feedback_text TEXT,
     rating SMALLINT CHECK (rating BETWEEN 1 AND 5),
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_database FOREIGN KEY (database_id) REFERENCES databases(id),
     CONSTRAINT fk_sql_sample FOREIGN KEY (sql_sample_id) REFERENCES sql_samples(id)
 );
@@ -267,15 +258,16 @@ CREATE TABLE query_usage_stats (
     execution_time_ms INTEGER,
     success BOOLEAN,
     error_message TEXT,
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_database FOREIGN KEY (database_id) REFERENCES databases(id),
     CONSTRAINT fk_sql_sample FOREIGN KEY (sql_sample_id) REFERENCES sql_samples(id)
 );
 
 -- Convert time-series tables to hypertables
 SELECT create_hypertable('sql_samples', 'created_at');
-SELECT create_hypertable('query_feedback', 'timestamp');
-SELECT create_hypertable('query_usage_stats', 'timestamp');
+SELECT create_hypertable('query_feedback', 'created_at');
+SELECT create_hypertable('query_usage_stats', 'created_at');
 
 -- Create vector similarity indexes
 CREATE INDEX idx_sql_samples_query_embedding ON sql_samples USING hnsw (query_embedding vector_cosine_ops);
