@@ -73,6 +73,132 @@ generatesql --SQL--> executesql
 executesql --> out
 ```
 
+## Vector Store
+
+### No embedding_model table
+
+```mermaid
+erDiagram
+    databases ||--|{ sql_samples : "contains"
+    databases ||--|{ database_schemas : "contains"
+    databases ||--|{ table_relationships : "contains"
+    databases ||--|{ query_feedback : "receives"
+    databases ||--|{ query_usage_stats : "tracks"
+    
+    database_schemas ||--o{ db_tables : "contains"
+    db_tables ||--o{ db_columns : "contains"
+    db_tables ||--o{ table_relationships : "has_from"
+    db_tables ||--o{ table_relationships : "has_to"
+    
+    sql_samples ||--o{ query_usage_stats : "tracked_by"
+    sql_samples ||--o{ query_feedback : "receives"
+
+    databases {
+        id bigserial PK
+        name varchar UK
+        description text
+        created_at timestamptz
+        updated_at timestamptz
+    }
+
+    sql_samples {
+        id bigserial PK
+        database_id bigint FK
+        query_text text
+        nl_description text
+        query_embedding vector
+        description_embedding vector
+        complexity smallint
+        database_type varchar
+        tags text[]
+        performance_notes text
+        source varchar
+        created_at timestamptz
+        updated_at timestamptz
+        avg_rating float
+        feedback_count integer
+        last_feedback_date timestamptz
+    }
+
+    database_schemas {
+        id bigserial PK
+        database_id bigint FK
+        schema_name varchar
+        description text
+        embedding vector
+        created_at timestamptz
+        updated_at timestamptz
+    }
+
+    db_tables {
+        id bigserial PK
+        schema_id bigint FK
+        table_name varchar
+        description text
+        embedding vector
+        sample_data jsonb
+        created_at timestamptz
+        updated_at timestamptz
+    }
+
+    db_columns {
+        id bigserial PK
+        table_id bigint FK
+        column_name varchar
+        data_type varchar
+        description text
+        embedding vector
+        is_primary_key boolean
+        is_foreign_key boolean
+        references_table varchar
+        references_column varchar
+        created_at timestamptz
+        updated_at timestamptz
+    }
+
+    table_relationships {
+        id bigserial PK
+        database_id bigint FK
+        from_table_id bigint FK
+        to_table_id bigint FK
+        from_table varchar
+        to_table varchar
+        relationship_type varchar
+        from_column varchar
+        to_column varchar
+        description text
+        embedding vector
+        created_at timestamptz
+        updated_at timestamptz
+    }
+
+    query_usage_stats {
+        id bigserial PK
+        database_id bigint FK
+        sql_sample_id bigint FK
+        nl_query text
+        similarity_score float
+        execution_time_ms integer
+        success boolean
+        error_message text
+        timestamp timestamptz
+    }
+
+    query_feedback {
+        id bigserial PK
+        database_id bigint FK
+        sql_sample_id bigint FK
+        nl_query text
+        nl_query_embedding vector
+        generated_sql text
+        rating smallint
+        feedback_text text
+        is_correct boolean
+        correction text
+        user_id varchar
+        timestamp timestamptz
+    }
+```
 
 ## Database 
 This project utilizes the `student_transcripts_tracking` database provided in Yale's [Spider 1.0 project](https://yale-lily.github.io/spider). This is a Text-to-SQL challenge where natural language queries were and the corresponding SQL was provided. They provide `sqlite` databases. cited as follows:
