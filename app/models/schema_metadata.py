@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, JSON
 from sqlalchemy.orm import relationship
-from timescale_vector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector
 from .base import BaseModel # Import the new base model
 
 class SchemaMetadata(BaseModel): # Inherit from BaseModel

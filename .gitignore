@@ -1,4 +1,6 @@
 .mcp.json
+myenv/
+lib64/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

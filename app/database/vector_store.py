@@ -54,7 +54,7 @@ class VectorStore:
         self.vec_client.create_tables()
 
     def create_index(self) -> None:
-        """Create the StreamingDiskANN index to spseed up similarity search"""
+        """Create the StreamingDiskANN index to speed up similarity search"""
         self.vec_client.create_embedding_index(client.DiskAnnIndex())
 
     def drop_index(self) -> None:

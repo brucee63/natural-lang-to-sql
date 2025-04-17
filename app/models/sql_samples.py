@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, Text, Float, SmallInteger, ForeignKey, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from timescale_vector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector
 from .base import BaseModel # Import the new base model
 
 class SqlSample(BaseModel): # Inherit from BaseModel
