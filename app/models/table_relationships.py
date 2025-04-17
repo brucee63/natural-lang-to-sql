@@ -6,6 +6,7 @@ from .base import BaseModel # Import the new base model
 class TableRelationship(BaseModel): # Inherit from BaseModel
     __tablename__ = 'table_relationships'
 
+    # Remove id, created_at, updated_at as they are in BaseModel
     database_id = Column(Integer, ForeignKey('databases.id'), nullable=False)
     from_table = Column(String(100), nullable=False)
     to_table = Column(String(100), nullable=False)

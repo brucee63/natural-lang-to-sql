@@ -5,6 +5,7 @@ from .base import BaseModel # Import the new base model
 class QueryUsageStats(BaseModel): # Inherit from BaseModel
     __tablename__ = 'query_usage_stats'
 
+    # Remove id, created_at, updated_at as they are in BaseModel
     database_id = Column(Integer, ForeignKey('databases.id'), nullable=False)
     sql_sample_id = Column(Integer, ForeignKey('sql_samples.id'))
     nl_query = Column(Text, nullable=False)
