@@ -7,7 +7,9 @@ from alembic import context
 
 import os
 from dotenv import load_dotenv
-load_dotenv()  # This loads the .env file into environment variables
+# Load the .env file from the app directory
+app_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app')
+load_dotenv(os.path.join(app_dir, '.env'))
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
