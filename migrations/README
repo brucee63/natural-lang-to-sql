@@ -1,1 +1,2 @@
-Generic single-database configuration.
+# Postgres PGVector DB
+This is used for the embedding DB, but we also have a robust data model to support the NL to SQL Agent features. 

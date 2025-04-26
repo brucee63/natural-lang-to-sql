@@ -73,6 +73,30 @@ generatesql --SQL--> executesql
 executesql --> out
 ```
 
+## Repo Structure
+```
+.
+├── .github/
+├── app/
+│   ├── config/
+│   ├── database/
+│   ├── models/
+│   ├── prompts/
+│   │   └── templates/
+│   ├── services/
+│   ├── tests/
+│   └── utils/
+├── data/
+│   └── spider/
+│       └── sqlite/
+├── docker/
+├── migrations/
+│   └── versions/
+└── playground/
+    ├── llm/
+    └── similarity/
+```
+
 ## Vector Store
 
 ### No embedding_model table
