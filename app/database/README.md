@@ -288,4 +288,91 @@ CREATE INDEX idx_sql_samples_tags ON sql_samples USING GIN (tags);
 CREATE INDEX idx_schema_metadata_table_name ON schema_metadata (database_id, table_name);
 CREATE INDEX idx_query_feedback_is_correct ON query_feedback (is_correct);
 CREATE INDEX idx_query_feedback_rating ON query_feedback (rating);
+
+## Vector Store Compatible ERD
+
+This ERD reflects a structure aligned with the `timescale_vector` client pattern, using `id`, `contents`, `embedding`, and `metadata` columns for tables intended for vector storage.
+```
+
+```mermaid
+erDiagram
+    databases ||--|{ sql_samples : "contains"
+    databases ||--|{ database_schemas : "contains"
+    databases ||--|{ table_relationships : "contains"
+    databases ||--|{ query_feedback : "receives"
+    databases ||--|{ query_usage_stats : "tracks"
+
+    database_schemas ||--o{ db_tables : "contains"
+    db_tables ||--o{ db_columns : "contains"
+    db_tables ||--o{ table_relationships : "has_from"
+    db_tables ||--o{ table_relationships : "has_to"
+
+    sql_samples ||--o{ query_usage_stats : "tracked_by"
+    sql_samples ||--o{ query_feedback : "receives"
+
+    %% Non-vector table, keeps original structure but uses UUID PK for FK consistency
+    databases {
+        id uuid PK
+        name varchar UK
+        description text
+        created_at timestamptz
+        updated_at timestamptz
+    }
+
+    %% Vector Store Compatible Tables
+    sql_samples {
+        id uuid PK
+        contents text "nl_description"
+        embedding vector
+        metadata jsonb "FKs: database_id (uuid). Other: query_text, complexity, tags, etc."
+    }
+
+    database_schemas {
+        id uuid PK
+        contents text "description"
+        embedding vector
+        metadata jsonb "FKs: database_id (uuid). Other: schema_name, created_at, etc."
+    }
+
+    db_tables {
+        id uuid PK
+        contents text "description"
+        embedding vector
+        metadata jsonb "FKs: schema_id (uuid). Other: table_name, sample_data, etc."
+    }
+
+    db_columns {
+        id uuid PK
+        contents text "description"
+        embedding vector
+        metadata jsonb "FKs: table_id (uuid). Other: column_name, data_type, keys, refs, etc."
+    }
+
+    table_relationships {
+        id uuid PK
+        contents text "description"
+        embedding vector
+        metadata jsonb "FKs: database_id, from_table_id, to_table_id (all uuid). Other: names, type, columns, etc."
+    }
+
+    query_feedback {
+        id uuid PK
+        contents text "nl_query"
+        embedding vector
+        metadata jsonb "FKs: database_id, sql_sample_id (all uuid). Other: generated_sql, rating, feedback, user, etc."
+    }
+
+    %% Non-vector table, keeps original structure but uses UUID PK/FKs
+    query_usage_stats {
+        id uuid PK
+        database_id uuid FK
+        sql_sample_id uuid FK
+        nl_query text
+        similarity_score float
+        execution_time_ms integer
+        success boolean
+        error_message text
+        created_at timestamptz
+        updated_at timestamptz
+    }
 ```
