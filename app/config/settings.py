@@ -12,7 +12,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Point to the .env file in the same directory (or adjust as needed)
 DOTENV_PATH = os.path.join(BASE_DIR, '..', '.env')
-load_dotenv(DOTENV_PATH)
+
+# Load environment variables from .env file
+# Added verbose=True for debugging and override=True to ensure .env takes precedence
+load_dotenv(dotenv_path=DOTENV_PATH, verbose=True, override=True)
 
 def setup_logging():
     """Configure basic logging for the application."""

@@ -3,7 +3,6 @@ import os
 import json
 import logging
 from openai import OpenAI, OpenAIError
-from sqlalchemy.sql import text # Correct import for text()
 import sys
 
 
@@ -18,8 +17,9 @@ from app.database.sqlite_client import SQLiteClient
 # --- Configuration ---
 SQLITE_DB_PATH = os.path.join(project_root, 'data', 'spider', 'sqlite', 'student_transcripts_tracking.sqlite')
 DESCRIPTIONS_PATH = os.path.join(project_root, 'data', 'table_descriptions.json')
-OUTPUT_SQL_PATH = os.path.join(project_root, 'migrations', 'sql', 'schema_metadata_inserts.sql') # Updated path
-DATABASE_ID = 1 # As specified
+OUTPUT_SQL_PATH = os.path.join(project_root, 'migrations', 'sql', 'db_tables_inserts.sql') # Updated output path
+TARGET_DATABASE_NAME = 'student_transcripts_tracking' # Database name to look up
+TARGET_SCHEMA_NAME = 'public' # Schema name to look up
 EMBEDDING_MODEL = "text-embedding-3-small" # Or your preferred OpenAI model
 # Ensure OPENAI_API_KEY environment variable is set
 
@@ -60,7 +60,7 @@ def get_tables(client: SQLiteClient):
         return []
 
 def get_table_schema(client: SQLiteClient, table_name: str):
-    """Retrieves the CREATE TABLE statement for a given table."""
+    """Retrieves the CREATE TABLE statement for a given table (used for default description)."""
     try:
         # Pass the query as a plain string
         query = "SELECT sql FROM sqlite_master WHERE type='table' AND name = :table_name"
@@ -93,7 +93,7 @@ def load_descriptions(path: str):
 
 # --- Main Script ---
 if __name__ == "__main__":
-    logging.info("Starting schema embedding generation process...")
+    logging.info("Starting db_tables embedding generation process...")
 
     # Check if SQLite DB exists
     if not os.path.exists(SQLITE_DB_PATH):
@@ -125,18 +125,17 @@ if __name__ == "__main__":
         for table_name in tables:
             logging.info(f"Processing table: {table_name}")
 
-            # Get schema
-            schema = get_table_schema(sqlite_client, table_name)
-            if not schema:
-                continue # Skip if schema couldn't be retrieved
+            # Get description (schema is no longer needed for embedding text)
+            description = table_descriptions.get(table_name)
+            if not description:
+                 # Optionally get schema just for a default description if needed
+                 # schema_for_desc = get_table_schema(sqlite_client, table_name) or ""
+                 # description = f"Definition for the {table_name} table." # Simpler default
+                 logging.warning(f"No description found for table '{table_name}'. Using empty description.")
+                 description = "" # Use empty string if no description found
 
-            # Get description
-            description = table_descriptions.get(table_name, f"Schema for the {table_name} table.") # Default description
-            if table_name not in table_descriptions:
-                 logging.warning(f"No description found for table '{table_name}'. Using default.")
-
-            # Prepare text for embedding
-            text_to_embed = f"Table Name: {table_name}\nSchema: {schema}\nDescription: {description}"
+            # Prepare text for embedding (only table name and description)
+            text_to_embed = f"Table Name: {table_name}\nDescription: {description}"
 
             # Generate embedding
             logging.info(f"Generating embedding for {table_name}...")
@@ -145,23 +144,41 @@ if __name__ == "__main__":
                 logging.warning(f"Could not generate embedding for {table_name}. Skipping.")
                 continue
 
-            # Format data for INSERT statement
-            # Store the raw schema string within a JSON object for the 'columns' field
-            columns_json = json.dumps({"schema_definition": schema})
             # Format embedding list as string for PostgreSQL vector type
             embedding_str = str(embedding).replace(" ", "") # Compact string representation
 
             # Escape single quotes in text fields for SQL
             table_name_sql = table_name.replace("'", "''")
             description_sql = description.replace("'", "''")
-            columns_json_sql = columns_json.replace("'", "''")
 
-            # Create INSERT statement including created_at and updated_at
-            # Assumes 'schema_metadata' table columns: database_id, table_name, description, embedding, columns, sample_data, created_at, updated_at
-            # id is serial
+            # Get table schema for metadata
+            table_schema = get_table_schema(sqlite_client, table_name)
+            if not table_schema:
+                logging.warning(f"Could not retrieve schema for table {table_name} for metadata.")
+                table_schema_json_sql = "NULL"
+            else:
+                # Format schema as JSON string for extra_metadata
+                extra_metadata = {"schema_definition": table_schema}
+                # Escape single quotes for SQL
+                table_schema_json_sql = f"'{json.dumps(extra_metadata).replace("'", "''")}'"
+
+            # Create INSERT statement for db_tables
+            # Fetches schema_id dynamically
+            # id is now explicitly set using uuid_generate_v4()
+            # created_at uses NOW()
             insert_sql = (
-                f"INSERT INTO schema_metadata (database_id, table_name, description, embedding, columns, sample_data, created_at, updated_at) VALUES "
-                f"({DATABASE_ID}, '{table_name_sql}', '{description_sql}', '{embedding_str}', '{columns_json_sql}', NULL, NOW(), NULL);"
+                f"INSERT INTO db_tables (id, schema_id, table_name, description, embedding, include_in_context, sample_data, extra_metadata, created_at, updated_at) VALUES (\n"
+                f"    uuid_generate_v4(),\n"
+                f"    (SELECT ds.id FROM database_schemas ds JOIN databases d ON ds.database_id = d.id WHERE d.name = '{TARGET_DATABASE_NAME}' AND ds.schema_name = '{TARGET_SCHEMA_NAME}' LIMIT 1),\n"
+                f"    '{table_name_sql}',\n"
+                f"    '{description_sql}',\n"
+                f"    '{embedding_str}',\n"
+                f"    TRUE, -- include_in_context\n"
+                f"    NULL, -- sample_data\n"
+                f"    {table_schema_json_sql}, -- extra_metadata (JSON with schema)\n"
+                f"    NOW(), -- created_at\n"
+                f"    NULL -- updated_at\n"
+                f");"
             )
             sql_inserts.append(insert_sql)
             logging.info(f"Generated INSERT statement for {table_name}")
@@ -178,15 +195,17 @@ if __name__ == "__main__":
     # Write INSERT statements to file
     if sql_inserts:
         try:
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(OUTPUT_SQL_PATH), exist_ok=True)
             with open(OUTPUT_SQL_PATH, 'w') as f:
-                f.write("-- SQL INSERT statements for schema_metadata\n")
-                f.write("-- Generated on: " + logging.Formatter().formatTime(logging.LogRecord(None, None, "", 0, "", (), None, None)) + "\n\n")
+                f.write("-- SQL INSERT statements for db_tables\n")
+                f.write(f"-- Generated on: {logging.Formatter().formatTime(logging.LogRecord(None, None, '', 0, '', (), None, None))}\n\n")
                 for stmt in sql_inserts:
-                    f.write(stmt + "\n")
+                    f.write(stmt + "\n\n") # Add extra newline for readability
             logging.info(f"Successfully wrote {len(sql_inserts)} INSERT statements to {OUTPUT_SQL_PATH}")
         except IOError as e:
             logging.error(f"Failed to write SQL output file: {e}")
     else:
         logging.warning("No INSERT statements were generated.")
 
-    logging.info("Schema embedding generation process finished.")
+    logging.info("db_tables embedding generation process finished.")

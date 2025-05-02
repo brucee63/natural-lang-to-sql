@@ -1,11 +1,11 @@
 ## ERD with Individual Columns (Vector Store Compatible)
 
-This ERD uses individual columns for frequently accessed/filtered attributes while retaining `embedding` and `metadata` columns for vector search compatibility via `timescale_vector`.
+This ERD uses individual columns for frequently accessed/filtered attributes while retaining `embedding` and `extra_metadata` columns for vector search compatibility via `timescale_vector`.
 
 ```mermaid
 erDiagram
     databases ||--|{ sql_samples : "contains"
-    databases ||--|{ database_schemas : "contains"
+    databases ||--|{ database_schemas : "contains":w
     databases ||--|{ table_relationships : "contains"
     databases ||--|{ query_feedback : "receives"
     databases ||--|{ query_usage_stats : "tracks"
@@ -38,7 +38,7 @@ erDiagram
         tags text[]
         avg_rating float
         feedback_count integer
-        metadata jsonb "Optional: source, performance_notes, etc."
+        extra_metadata jsonb "Optional: source, performance_notes, etc."
         created_at timestamptz
         updated_at timestamptz
     }
@@ -50,7 +50,7 @@ erDiagram
         description text "Used as 'contents' for embedding"
         embedding vector
         include_in_context boolean "Flag to include in LLM context"
-        metadata jsonb "Optional: other schema details"
+        extra_metadata jsonb "Optional: other schema details"
         created_at timestamptz
         updated_at timestamptz
     }
@@ -63,7 +63,7 @@ erDiagram
         embedding vector
         include_in_context boolean "Flag to include in LLM context"
         sample_data jsonb
-        metadata jsonb "Optional: other table details"
+        extra_metadata jsonb "Optional: other table details"
         created_at timestamptz
         updated_at timestamptz
     }
@@ -81,7 +81,7 @@ erDiagram
         references_table varchar
         references_column varchar
         include_in_context boolean "Flag to include in LLM context"
-        metadata jsonb "Optional: constraints, defaults, etc."
+        extra_metadata jsonb "Optional: constraints, defaults, etc."
         created_at timestamptz
         updated_at timestamptz
     }
@@ -96,7 +96,7 @@ erDiagram
         to_column varchar
         description text "Used as 'contents' for embedding"
         embedding vector
-        metadata jsonb "Optional: cardinality, etc."
+        extra_metadata jsonb "Optional: cardinality, etc."
         created_at timestamptz
         updated_at timestamptz
     }
@@ -113,7 +113,7 @@ erDiagram
         is_correct boolean
         correction text
         user_id varchar
-        metadata jsonb "Optional: session_id, etc."
+        extra_metadata jsonb "Optional: session_id, etc."
         created_at timestamptz
         updated_at timestamptz
     }
@@ -161,7 +161,7 @@ CREATE TABLE sql_samples (
     tags TEXT[],
     avg_rating FLOAT,
     feedback_count INTEGER DEFAULT 0,
-    metadata JSONB, -- Optional: source, performance_notes, etc.
+    extra_metadata JSONB, -- Optional: source, performance_notes, etc.
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -173,7 +173,7 @@ CREATE TABLE database_schemas (
     description TEXT, -- Used as 'contents' for embedding
     embedding VECTOR(1536), -- Assuming 1536 dimensions, adjust as needed
     include_in_context BOOLEAN NOT NULL DEFAULT TRUE, -- Flag to include in LLM context
-    metadata JSONB, -- Optional: other schema details
+    extra_metadata JSONB, -- Optional: other schema details
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (database_id, schema_name)
@@ -187,7 +187,7 @@ CREATE TABLE db_tables (
     embedding VECTOR(1536), -- Assuming 1536 dimensions, adjust as needed
     include_in_context BOOLEAN NOT NULL DEFAULT TRUE, -- Flag to include in LLM context
     sample_data JSONB,
-    metadata JSONB, -- Optional: other table details
+    extra_metadata JSONB, -- Optional: other table details
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (schema_id, table_name)
@@ -206,7 +206,7 @@ CREATE TABLE db_columns (
     references_table VARCHAR(255), -- Name of the referenced table
     references_column VARCHAR(255), -- Name of the referenced column
     include_in_context BOOLEAN NOT NULL DEFAULT TRUE, -- Flag to include in LLM context
-    metadata JSONB, -- Optional: constraints, defaults, etc.
+    extra_metadata JSONB, -- Optional: constraints, defaults, etc.
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (table_id, column_name)
@@ -222,7 +222,7 @@ CREATE TABLE table_relationships (
     to_column VARCHAR(255) NOT NULL,   -- Name of the column in the 'to' table
     description TEXT, -- Used as 'contents' for embedding
     embedding VECTOR(1536), -- Assuming 1536 dimensions, adjust as needed
-    metadata JSONB, -- Optional: cardinality, etc.
+    extra_metadata JSONB, -- Optional: cardinality, etc.
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     -- Consider adding a UNIQUE constraint on (from_table_id, from_column, to_table_id, to_column) if appropriate
@@ -240,7 +240,7 @@ CREATE TABLE query_feedback (
     is_correct BOOLEAN,
     correction TEXT,
     user_id VARCHAR(255), -- Or link to a users table if you have one
-    metadata JSONB, -- Optional: session_id, etc.
+    extra_metadata JSONB, -- Optional: session_id, etc.
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
