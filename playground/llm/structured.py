@@ -1,24 +1,24 @@
-import json
 import os
 import sys
-from pydantic import BaseModel
-import database.sqlite_client as sqlite_client
-
-from openai import OpenAI
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+import json
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Move two levels up to the 'project' directory
-project_root = os.path.abspath(os.path.join(current_dir, "..", "..", "app"))
-
+path = os.path.abspath(os.path.join(current_dir, "..", "..", "data", "table_descriptions.json"))
+# Move two levels up to the project root directory
+project_root = os.path.abspath(os.path.join(current_dir, "..", ".."))
 # Add the project root to sys.path
 sys.path.append(project_root)
 
-from prompts.prompt_manager import PromptManager
+import app.database.sqlite_client as sqlite_client
+from pydantic import BaseModel
+from openai import OpenAI
+from app.prompts.prompt_manager import PromptManager
+# Explicitly load .env from the app directory
+from dotenv import load_dotenv
+load_dotenv(os.path.join(project_root, 'app', '.env'))  # Load environment variables from app/.env file
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # read the table_descriptions.json file
-path = os.path.abspath(os.path.join(current_dir, "..", "..", "data", "table_descriptions.json"))
 with open(path) as f:
     table_descriptions = json.load(f)
 
@@ -53,11 +53,13 @@ schemas=""
 
 if(response.tables):
     print("Tables found:")
-    sql_client = sqlite_client.SQLiteClient('../data/spider/sqlite/student_transcripts_tracking.sqlite')
+    # Always use absolute path for the SQLite database
+    db_path = os.path.join(project_root, 'data', 'spider', 'sqlite', 'student_transcripts_tracking.sqlite')
+    sql_client = sqlite_client.SQLiteClient(db_path)
     for table in response.tables:
         print(table)
         query = f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{table}'"
-        df = client.execute_query(query)
+        df = sql_client.execute_query(query)
 
         # Print the schema for the table
         if not df.empty:
@@ -91,7 +93,7 @@ if(response.tables):
     response = response.replace("```sql", "").replace("```", "").strip()
     print(response)
     
-    sql_client = sqlite_client.SQLiteClient('../data/spider/sqlite/student_transcripts_tracking.sqlite')
+    sql_client = sqlite_client.SQLiteClient(db_path)
     df = sql_client.execute_query(response)
     print(df)
     sql_client.close()
